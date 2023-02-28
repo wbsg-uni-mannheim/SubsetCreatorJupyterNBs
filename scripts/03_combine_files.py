@@ -31,6 +31,6 @@ def combineSubset(subset):
             with open(input_path_microdata+subset+"/"+fn, 'rb') as rfp:
                 shutil.copyfileobj(rfp, wfp)
 
-pool = Pool(40)
+pool = Pool(10)
 for result in tqdm(pool.imap(func=combineSubset, iterable=all_subsets_names), total=len(all_subsets_names)):
     pass

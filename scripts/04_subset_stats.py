@@ -7,11 +7,14 @@ from multiprocessing import Pool, Process, Manager
 from tqdm import tqdm
 import tldextract
 import os
+import pandas as pd
 
 input_path = "/ceph/alebrink/WDC_Extraction_2022/9_c_schema_no_enc_issues_combined/"
 #input_path = "C:/Users/alebrink/Documents/02_Research/WebDataCommons/extractions/2022/9_c_schema_no_enc_issues_combined/"
 output_path = "/ceph/alebrink/WDC_Extraction_2022/9_c_schema_classspecific/"
 #output_path = "C:/Users/alebrink/Documents/02_Research/WebDataCommons/extractions/2022/9_c_schema_classspecific/"
+class_list_file = "/ceph/alebrink/WDC_Extraction_2022/schemaOrgclasses.txt"
+class_list_file_pd = pd.read_csv(class_list_file, sep='\t', names=['type', 'filename'])
 extraction = "2022-12"
 
 def getstatsofsubset(subsetfile):
@@ -79,10 +82,11 @@ def getstatsofsubset(subsetfile):
                     count_pld_stats = False
 
             elif count_pld_stats and domain in domain_stats:
-                schema_type = line.split()[-4]
+                schema_type = line.split()[1]
                 entity = line.split()[0]
 
                 if current_entity == entity:
+
                     if 'schema.org/' in schema_type:
                         schema_type = schema_type.split('schema.org/')[-1].replace('>', '')
                         if schema_type not in entity_schema_org_types:
@@ -101,9 +105,9 @@ def getstatsofsubset(subsetfile):
     chunk_path = output_path + subsetfile.replace('.gz', '/') + 'part_{}.gz'.format(current_chunk)
 
     if not os.path.exists(output_path + subsetfile.replace('.gz', '/')):
-        os.makedirs(output_path + subsetfile.replace('.gz', '/'))
+       os.makedirs(output_path + subsetfile.replace('.gz', '/'))
 
-    # Write remaining chunk lines to file
+    # Write remaining chunk lines to file --> Rerun code
     with gzip.open(chunk_path, 'wt', encoding='utf-8') as f_chunk:
         for line in chunk_lines:
             f_chunk.write(line)
@@ -111,21 +115,24 @@ def getstatsofsubset(subsetfile):
     # Create look up file --> extract pld+tld+file_lookup
     lookup_file_path = output_path + subsetfile.replace('.gz', '') + '/' + subsetfile.replace('.gz', '_lookup.csv')
     with open(lookup_file_path, 'w') as lookup_file:
-        lookup_file.write('pld,tld,file_lookup\n')
-        for pld in domain_chunk_dict:
-            tld = pld.split('.')[-1]
-            chunk = 'part_{}.gz'.format(domain_chunk_dict[pld])
-            lookup_file.write('{},{},{}\n'.format(pld, tld, chunk))
+       lookup_file.write('pld,tld,file_lookup\n')
+       for pld in domain_chunk_dict:
+           tld = pld.split('.')[-1]
+           chunk = 'part_{}.gz'.format(domain_chunk_dict[pld])
+           lookup_file.write('{},{},{}\n'.format(pld, tld, chunk))
 
     # Create domain stats
     for domain in domain_stats:
         domain_stats[domain]['schema_dict'] = {k: v / domain_stats[domain]['entities'] for k, v in domain_stats[domain]['schema_dict'].items()}
 
+    if not os.path.exists(output_path + subsetfile.replace('.gz', '')):
+        os.makedirs(output_path + subsetfile.replace('.gz', ''))
+
     domain_stats_path = output_path + subsetfile.replace('.gz', '') + '/' + subsetfile.replace('.gz', '_domain_stats.csv')
     with open(domain_stats_path, 'w') as domain_stats_file:
-        domain_stats_file.write('Domain,#Quads of Subset,#Entities of class,Properties and Density\n')
+        domain_stats_file.write('Domain\t#Quads of Subset\t#Entities of class\tProperties and Density\n')
         for domain in domain_stats:
-            domain_stats_file.write('{},{},{},{}\n'.format(domain, domain_stats[domain]['entities'], domain_stats[domain]['quads'], domain_stats[domain]['schema_dict']))
+            domain_stats_file.write('{}\t{}\t{}\t{}\n'.format(domain, domain_stats[domain]['quads'], domain_stats[domain]['entities'], domain_stats[domain]['schema_dict']))
 
 
     return (quadcounter, len(distinct_urls), len(domain_chunk_dict), schema_dict, size, subsetfile, current_chunk)
@@ -133,15 +140,17 @@ def getstatsofsubset(subsetfile):
 
 # %%
 
-files_ = [f for f in listdir(input_path) if isfile(join(input_path, f)) and '.gz' in f]
-
+# Filter only relevant schema_org classes
+relevant_files = ['{}.gz'.format(class_file_name) for class_file_name in class_list_file_pd['filename']]
+files_ = [f for f in listdir(input_path) if isfile(join(input_path, f)) and '.gz' in f and f in relevant_files]
+#print(files_)
 # Filter files
 #existingFiles = ['AdministrativeArea.gz', 'Airport.gz', 'Book.gz', 'City.gz', 'CollegeOrUniversity.gz', 'Continent.gz', 'Dataset.gz', 'Event.gz', 'GeoCoordinates.gz', 'GovernmentOrganization.gz', 'Hospital.gz', 'JobPosting.gz', 'LakeBodyOfWater.gz', 'LandmarksOrHistoricalBuildings.gz', 'Language.gz', 'Library.gz', 'LocalBusiness.gz', 'Mountain.gz', 'Movie.gz', 'Museum.gz', 'MusicAlbum.gz', 'MusicRecording.gz', 'Park.gz', 'Place.gz', 'RadioStation.gz', 'Restaurant.gz', 'School.gz', 'SkiResort.gz', 'SportsEvent.gz', 'SportsTeam.gz', 'StadiumOrArena.gz', 'TelevisionStation.gz']
 
 #files_ = [f for f in files_ if f not in existingFiles]
 
 html_stats = ""
-pool = Pool(40)
+pool = Pool(5)
 #for file in files_:
 #    result = getstatsofsubset(file)
 for result in tqdm(pool.imap(func=getstatsofsubset, iterable=files_), total=len(files_)):

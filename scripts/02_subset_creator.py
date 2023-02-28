@@ -10,10 +10,10 @@ subset_class_path = ""
 class_list_file = "/ceph/alebrink/WDC_Extraction_2022/schemaOrgclasses.txt"
 class_list_file_pd = pd.read_csv(class_list_file, sep='\t', names=['type', 'filename'])
 class_list_file_dict = pd.Series(class_list_file_pd.filename.values, index=class_list_file_pd.type).to_dict()
-input_path = "/ceph/alebrink/WDC_Extraction_2022/7_sorted_quads/html-microdata/"
+input_path = "/ceph/alebrink/WDC_Extraction_2022/7_sorted_quads/html-embedded-jsonld/"
 files_json = [f for f in listdir(input_path) if isfile(join(input_path, f))]
 
-output_path = "/ceph/alebrink/WDC_Extraction_2022/8_c_schema_microdata_full_no_enc_issues/"
+output_path = "/ceph/alebrink/WDC_Extraction_2022/8_c_schema_json_full_no_enc_issues/"
 
 for key in class_list_file_dict:
     os.makedirs(output_path+class_list_file_dict[key])

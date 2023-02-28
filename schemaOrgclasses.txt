@@ -1,5 +1,6 @@
 schema.org/AdministrativeArea	AdministrativeArea
 schema.org/Airport	Airport
+schema.org/Answer	Answer
 schema.org/Book	Book
 schema.org/City	City
 schema.org/CollegeOrUniversity	CollegeOrUniversity
@@ -9,6 +10,7 @@ schema.org/CreativeWork	CreativeWork
 schema.org/Dataset	Dataset
 schema.org/EducationalOrganization	EducationalOrganization
 schema.org/Event	Event
+schema.org/FAQPage	FAQPage
 schema.org/GeoCoordinates	GeoCoordinates
 schema.org/GovernmentOrganization	GovernmentOrganization
 schema.org/Hospital	Hospital
@@ -30,6 +32,8 @@ schema.org/Park	Park
 schema.org/Person	Person
 schema.org/Place	Place
 schema.org/Product	Product
+schema.org/QAPage	QAPage
+schema.org/Question	Question
 schema.org/RadioStation	RadioStation
 schema.org/Recipe	Recipe
 schema.org/Restaurant	Restaurant
