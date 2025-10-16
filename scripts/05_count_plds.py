@@ -89,7 +89,7 @@ def collect_plds(filepath):
 
                     schema_type = line.split()[-3][1:-1]
 
-                    if 'http://schema.org/BreadcrumbList' in schema_type \
+                    if 'http://schema.org/' in schema_type \
                             or 'https://schema.org/' in schema_type:
 
                         url = line.split()[-2][1:-1]
